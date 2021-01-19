@@ -2,13 +2,13 @@ package main.scala.sodoku.domain
 
 import java.util.UUID
 
-import play.api.libs.json.{JsValue, Json, Writes}
-import sodoku.utils.IntegerUtils
+import play.api.libs.json.{JsArray, JsValue, Json, Writes}
+import sudoku.utils.IntegerUtils
 
 import scala.collection.mutable.ArrayBuffer
 
 
-class Sodoku(
+class Sudoku(
   private var id: UUID = UUID.randomUUID(),
   private var contents: Array[Option[Int]]
 ) {
@@ -71,6 +71,8 @@ class Sodoku(
     contents(cellNumber) = Some(cellValue)
   }
 
+  def getId(): UUID = id
+
   private def assertWithinBounds(cellNumber: Int) = if (cellNumber < 0 || cellNumber >= contents.size) {
     throw new IllegalArgumentException(s"${cellNumber} is out of bounds")
   }
@@ -132,19 +134,29 @@ class Sodoku(
   }
 }
 
-object Sodoku {
+object Sudoku {
 
-  def emptySodoku(): Sodoku = new Sodoku(9)
+  def emptySodoku(): Sudoku = new Sudoku(9)
 
-  def toJson(sodoku: Sodoku): JsValue = {
+  def toJson(sudokus: List[Sudoku]): JsValue = {
+    Json.obj(
+      "count" -> sudokus.length,
+      "items" -> JsArray(
+        sudokus.map{ sudoku => toJson(sudoku) }
+      )
+    )
+  }
+
+  def toJson(sodoku: Sudoku): JsValue = {
     Json.obj(
       "id" -> sodoku.id.toString,
+      "hasError" -> !sodoku.isValid,
       "contents" -> sodoku.toString
     )
   }
 
-  implicit val implicitWrites = new Writes[Sodoku] {
-    def writes(sodoku: Sodoku): JsValue = toJson(sodoku)
+  implicit val implicitWrites = new Writes[Sudoku] {
+    def writes(sodoku: Sudoku): JsValue = toJson(sodoku)
   }
 
 }

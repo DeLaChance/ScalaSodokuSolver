@@ -1,23 +1,23 @@
-package sodoku
+package sudoku
 
-import main.scala.sodoku.domain.Sodoku
+import main.scala.sodoku.domain.Sudoku
 import org.scalatest._
 
-class SodokuSpec extends FunSuite with DiagrammedAssertions {
+class SudokuSpec extends FunSuite with DiagrammedAssertions {
 
-  test("Test that empty sodoku is valid") {
+  test("Test that empty sudoku is valid") {
     // Given
-    val sodoku = new Sodoku(9)
-    print(sodoku.toString())
+    val sudoku = new Sudoku(9)
+    print(sudoku.toString())
 
     // When
-    val isValid = sodoku.isValid()
+    val isValid = sudoku.isValid()
 
     // Then
     assert(isValid)
   }
 
-  test("Test that full sodoku is valid") {
+  test("Test that full sudoku is valid") {
     // Given
     val input = "" +
       "1,2,3,4,5,6,7,8,9\n" +
@@ -29,17 +29,17 @@ class SodokuSpec extends FunSuite with DiagrammedAssertions {
       "3,4,5,6,7,8,9,1,2\n" +
       "6,7,8,9,1,2,3,4,5\n" +
       "9,1,2,3,4,5,6,7,8\n"
-    val sodoku = new Sodoku(input)
-    print(sodoku.toString())
+    val sudoku = new Sudoku(input)
+    print(sudoku.toString())
 
     // When
-    val isValid = sodoku.isValid()
+    val isValid = sudoku.isValid()
 
     // Then
     assert(isValid)
   }
 
-  test("Test that double digit on single row sodoku is invalid") {
+  test("Test that double digit on single row sudoku is invalid") {
     // Given
     val input = "" +
       "1,2,3,4,5,6,7,8,1\n" +
@@ -51,17 +51,17 @@ class SodokuSpec extends FunSuite with DiagrammedAssertions {
       "3,4,5,6,7,8,9,1,2\n" +
       "6,7,8,9,1,2,3,4,5\n" +
       "9,1,2,3,4,5,6,7,8\n"
-    val sodoku = new Sodoku(input)
-    print(sodoku.toString())
+    val sudoku = new Sudoku(input)
+    print(sudoku.toString())
 
     // When
-    val isValid = sodoku.isValid()
+    val isValid = sudoku.isValid()
 
     // Then
     assert(!isValid)
   }
 
-  test("Test that double digit on single column sodoku is invalid") {
+  test("Test that double digit on single column sudoku is invalid") {
     // Given
     val input = "" +
       "1,2,3,4,5,6,7,8,9\n" +
@@ -73,17 +73,17 @@ class SodokuSpec extends FunSuite with DiagrammedAssertions {
       "3,4,5,6,7,8,9,1,2\n" +
       "1,7,8,9,*,2,3,4,5\n" +
       "9,1,2,3,4,5,6,7,8\n"
-    val sodoku = new Sodoku(input)
-    print(sodoku.toString())
+    val sudoku = new Sudoku(input)
+    print(sudoku.toString())
 
     // When
-    val isValid = sodoku.isValid()
+    val isValid = sudoku.isValid()
 
     // Then
     assert(!isValid)
   }
 
-  test("Test that double digit in one box of a sodoku is invalid") {
+  test("Test that double digit in one box of a sudoku is invalid") {
     // Given
     val input = "" +
       "1,2,3,4,5,6,7,8,1\n" +
@@ -95,11 +95,11 @@ class SodokuSpec extends FunSuite with DiagrammedAssertions {
       "3,4,5,6,7,8,9,1,2\n" +
       "6,7,8,9,1,2,3,4,5\n" +
       "9,1,*,3,4,5,6,7,8\n"
-    val sodoku = new Sodoku(input)
-    print(sodoku.toString())
+    val sudoku = new Sudoku(input)
+    print(sudoku.toString())
 
     // When
-    val isValid = sodoku.isValid()
+    val isValid = sudoku.isValid()
 
     // Then
     assert(!isValid)

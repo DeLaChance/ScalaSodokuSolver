@@ -1,1 +1,1 @@
-->  /api/sodokus    sodoku.adapter.http.SodokuRouter
+->  /api/sudoku    sudoku.adapter.http.SudokuRouter

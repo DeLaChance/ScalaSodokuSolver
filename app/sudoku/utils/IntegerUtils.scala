@@ -1,4 +1,4 @@
-package sodoku.utils
+package sudoku.utils
 
 object IntegerUtils {
 

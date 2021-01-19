@@ -1,6 +1,6 @@
 import sbt.Keys._
 
-name := """ScalaSodokuSolver"""
+name := """ScalaSudokuSolver"""
 version := "1.0"
 scalaVersion := "2.13.1"
 organization := "nl.lucien"
