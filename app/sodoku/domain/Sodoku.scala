@@ -1,22 +1,28 @@
 package main.scala.sodoku.domain
 
+import java.util.UUID
+
+import play.api.libs.json.{JsValue, Json, Writes}
 import sodoku.utils.IntegerUtils
 
 import scala.collection.mutable.ArrayBuffer
 
 
-class Sodoku(private var contents: Array[Option[Int]]) {
-
-  def this(dimension: Int) {
-    this(Array.fill[Option[Int]](dimension * dimension)(None))
-  }
-
-  def this(input: String) {
-    this(input.split("(\\,|\\n)").map(aString => IntegerUtils.toInt(aString)))
-  }
+class Sodoku(
+  private var id: UUID = UUID.randomUUID(),
+  private var contents: Array[Option[Int]]
+) {
 
   private val dimension: Int = Math.round(Math.sqrt(contents.length)).toInt
   private val boxDimension = Math.round(Math.sqrt(dimension)).toInt
+
+  def this(dimension: Int) {
+    this(contents = Array.fill[Option[Int]](dimension * dimension)(None))
+  }
+
+  def this(input: String) {
+    this(contents = input.split("(\\,|\\n)").map(aString => IntegerUtils.toInt(aString)))
+  }
 
   if (contents.size != dimension*dimension || dimension != boxDimension*boxDimension) {
     throw new IllegalArgumentException("Contents size needs to be a double square, e.g. 81 or 16")
@@ -125,3 +131,21 @@ class Sodoku(private var contents: Array[Option[Int]]) {
     return isValid
   }
 }
+
+object Sodoku {
+
+  def emptySodoku(): Sodoku = new Sodoku(9)
+
+  def toJson(sodoku: Sodoku): JsValue = {
+    Json.obj(
+      "id" -> sodoku.id.toString,
+      "contents" -> sodoku.toString
+    )
+  }
+
+  implicit val implicitWrites = new Writes[Sodoku] {
+    def writes(sodoku: Sodoku): JsValue = toJson(sodoku)
+  }
+
+}
+
