@@ -2,6 +2,7 @@ package sudoku
 
 import main.scala.sodoku.domain.Sudoku
 import org.scalatest._
+import play.api.libs.json.{JsObject, JsString, JsValue}
 
 class SudokuSpec extends FunSuite with DiagrammedAssertions {
 
@@ -105,6 +106,31 @@ class SudokuSpec extends FunSuite with DiagrammedAssertions {
     assert(!isValid)
   }
 
+  test("Test that sudoku is deserialized correctly") {
+    // Given
+    val input = "" +
+      "1,2,3,4,5,6,7,8,1\n" +
+      "4,5,6,7,8,9,1,2,3\n" +
+      "7,8,2,1,-,3,4,5,6\n" +
+      "2,3,4,5,6,7,8,9,-\n" +
+      "5,6,7,8,9,1,2,3,4\n" +
+      "8,9,1,2,3,4,5,6,7\n" +
+      "3,4,5,6,7,8,9,1,2\n" +
+      "6,7,8,9,1,2,3,4,5\n" +
+      "9,1,-,3,4,5,6,7,8"
+    val sudokuJson: JsValue = JsObject(Seq("contents" -> JsString(input)))
+    val sudoku = Sudoku.fromJson(sudokuJson)
+
+    // When
+    val deserializedSudoku = sudoku.toString()
+
+    // Then
+    println(input)
+    println(" ")
+    println(deserializedSudoku)
+
+    assert(input == deserializedSudoku)
+  }
 
 }
 

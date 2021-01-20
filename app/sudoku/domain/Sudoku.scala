@@ -13,19 +13,24 @@ class Sudoku(
   private var contents: Array[Option[Int]]
 ) {
 
-  private val dimension: Int = Math.round(Math.sqrt(contents.length)).toInt
-  private val boxDimension = Math.round(Math.sqrt(dimension)).toInt
-
   def this(dimension: Int) {
     this(contents = Array.fill[Option[Int]](dimension * dimension)(None))
   }
 
   def this(input: String) {
-    this(contents = input.split("(\\,|\\n)").map(aString => IntegerUtils.toInt(aString)))
+    this(contents =
+      input.replaceAll("[^\\,\\\\n\\ [0-9]+\\-\\*]","")
+      .split("(\\,|\\\\n|\\ )")
+      .filter(aString => !aString.isBlank)
+      .map(aString => IntegerUtils.toInt(aString)))
   }
 
+  private val dimension: Int = Math.round(Math.sqrt(contents.length)).toInt
+  private val boxDimension = Math.round(Math.sqrt(dimension)).toInt
+
   if (contents.size != dimension*dimension || dimension != boxDimension*boxDimension) {
-    throw new IllegalArgumentException("Contents size needs to be a double square, e.g. 81 or 16")
+    throw new IllegalArgumentException(s"Contents size is ${contents.size}, but needs to be a double square, " +
+      s"for example 81 or 16")
   }
 
   def isValid(): Boolean = {
@@ -50,11 +55,18 @@ class Sudoku(
         val cellNumber = i * dimension + j
         val cellValue = getCellValue(cellNumber)
         cellValue match {
-          case Some(intCellValue) => stringBuffer.append(s"${intCellValue},")
-          case None => stringBuffer.append(s"-,")
+          case Some(intCellValue) => stringBuffer.append(s"${intCellValue}")
+          case None => stringBuffer.append(s"-")
+        }
+
+        if (j < dimension-1) {
+          stringBuffer.append(",")
+        } else {
+          if (i < dimension-1) {
+            stringBuffer.append("\n")
+          }
         }
       }
-      stringBuffer.append("\n")
     }
 
     return stringBuffer.toString
@@ -153,6 +165,11 @@ object Sudoku {
       "hasError" -> !sodoku.isValid,
       "contents" -> sodoku.toString
     )
+  }
+
+  def fromJson(json: JsValue): Sudoku = {
+    val contentsString: String = json("contents").toString()
+    return new Sudoku(input = contentsString)
   }
 
   implicit val implicitWrites = new Writes[Sudoku] {

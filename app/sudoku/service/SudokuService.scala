@@ -4,6 +4,7 @@ import java.util.UUID
 
 import javax.inject.Singleton
 import main.scala.sodoku.domain.Sudoku
+import play.api.libs.json.JsValue
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -27,16 +28,22 @@ class SudokuService {
     return saveToRepo(sudoku)
   }
 
-  def saveToRepo(sudoku: Sudoku): Future[Sudoku] = {
+  def uploadJson(json: JsValue): Future[Sudoku] = {
+    val sudoku: Sudoku = Sudoku.fromJson(json)
+    saveToRepo(sudoku)
+  }
+
+  private def saveToRepo(sudoku: Sudoku): Future[Sudoku] = {
     sudokuRepo.put(sudoku.getId(), sudoku)
     return Future.successful(sudoku)
   }
 
-  def findById(id: String): Option[Sudoku] = {
+  private def findById(id: String): Option[Sudoku] = {
     try {
       return Some(sudokuRepo(UUID.fromString(id)))
     } catch {
       case _ => return None
     }
   }
+
 }

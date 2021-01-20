@@ -4,7 +4,8 @@ object IntegerUtils {
 
   def toInt(s: String): Option[Int] = {
     try {
-      Some(Integer.parseInt(s.trim))
+      val anInteger = Integer.parseInt(s.trim)
+      Some(anInteger)
     } catch {
       case e: Exception => None
     }

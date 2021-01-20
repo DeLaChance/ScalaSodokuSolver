@@ -1,1 +1,1 @@
-# ScalaSodokuSolver
+# ScalaSudokuSolver

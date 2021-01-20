@@ -3,10 +3,11 @@ package sudoku.adapter.http
 import javax.inject.Inject
 import main.scala.sodoku.domain.Sudoku
 import play.api.Logger
+import play.api.libs.json.JsValue
 import play.api.mvc.{AbstractController, ControllerComponents}
 import sudoku.service.SudokuService
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class SudokuController @Inject()(
     components: ControllerComponents,
@@ -32,6 +33,19 @@ class SudokuController @Inject()(
     logger.info("Creating new empty sodoku")
     sudokuService.createNew()
       .map(sodoku => Ok(Sudoku.toJson(sodoku)))
+  }
+
+  def upload = Action.async { implicit httpRequest =>
+
+    logger.info("Uploading a sudoku")
+
+    val bodyJson: Option[JsValue] = httpRequest.body.asJson
+    if (bodyJson.isEmpty) {
+      Future.successful(BadRequest("Invalid input"))
+    } else {
+      sudokuService.uploadJson(bodyJson.get)
+        .map(sodoku => Ok(Sudoku.toJson(sodoku)))
+    }
   }
 
   def mapToHttpResponse(optionalValue: Option[Sudoku]) = {
