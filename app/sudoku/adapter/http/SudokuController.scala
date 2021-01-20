@@ -48,6 +48,13 @@ class SudokuController @Inject()(
     }
   }
 
+  def delete(id: String) = Action.async { implicit httpRequest =>
+
+    logger.info("Deleting a sudoku")
+    sudokuService.deleteById(id)
+      .map(optionalSudoku => mapToHttpResponse(optionalSudoku))
+  }
+
   def mapToHttpResponse(optionalValue: Option[Sudoku]) = {
     if (optionalValue.isEmpty) {
       NotFound("Not found")

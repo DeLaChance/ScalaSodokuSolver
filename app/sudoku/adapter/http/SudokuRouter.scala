@@ -14,5 +14,6 @@ class SudokuRouter @Inject()(controller: SudokuController) extends SimpleRouter 
     case GET(p"/new") => controller.createNew
     case GET(p"/$id") => controller.fetchById(id: String)
     case POST(p"/") => controller.upload
+    case DELETE(p"/$id") => controller.delete(id: String)
   }
 }

@@ -33,6 +33,16 @@ class SudokuService {
     saveToRepo(sudoku)
   }
 
+  def deleteById(id: String): Future[Option[Sudoku]] = {
+    val optionalSudoku: Option[Sudoku] = findById(id)
+
+    if (optionalSudoku.isDefined) {
+        sudokuRepo.remove(optionalSudoku.get.getId())
+    }
+
+    return Future.successful(optionalSudoku)
+  }
+
   private def saveToRepo(sudoku: Sudoku): Future[Sudoku] = {
     sudokuRepo.put(sudoku.getId(), sudoku)
     return Future.successful(sudoku)
