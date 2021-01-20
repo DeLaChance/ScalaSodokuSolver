@@ -29,6 +29,11 @@ class SudokuController @Inject()(
       .map(optionalSudoku => mapToHttpResponse(optionalSudoku))
   }
 
+  def solveById(id: String) = Action.async { implicit httpRequest =>
+    sudokuService.solveSudoku(id)
+      .map(optionalSudoku => mapToHttpResponse(optionalSudoku))
+  }
+
   def createNew = Action.async { implicit httpRequest =>
     logger.info("Creating new empty sodoku")
     sudokuService.createNew()

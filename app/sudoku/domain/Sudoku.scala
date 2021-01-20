@@ -5,6 +5,7 @@ import java.util.UUID
 import play.api.libs.json.{JsArray, JsValue, Json, Writes}
 import sudoku.utils.IntegerUtils
 
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 
@@ -18,10 +19,10 @@ class Sudoku(
   }
 
   def this(input: String) {
-    this(contents =
-      input.replaceAll("[^\\,\\\\n\\ [0-9]+\\-\\*]","")
-      .split("(\\,|\\\\n|\\ )")
-      .filter(aString => !aString.isBlank)
+    this(contents = input.replaceAll("\"", "")
+      .replaceAll("[^\\,\\n\\ [0-9]+\\-\\*\\\\n]","")
+      .split("(\\,|\\n|\\ |\\\\n)")
+      .filter(aString => !aString.isBlank())
       .map(aString => IntegerUtils.toInt(aString)))
   }
 
@@ -47,6 +48,8 @@ class Sudoku(
     return allRowsValid && allColumnsValid && allBoxesValid
   }
 
+  def isComplete(): Boolean = fetchFirstOpenCell().isEmpty
+
   override def toString: String = {
 
     val stringBuffer = new StringBuffer()
@@ -56,7 +59,7 @@ class Sudoku(
         val cellValue = getCellValue(cellNumber)
         cellValue match {
           case Some(intCellValue) => stringBuffer.append(s"${intCellValue}")
-          case None => stringBuffer.append(s"-")
+          case None => stringBuffer.append(s"${Sudoku.EMPTY_CELL_VALUE}")
         }
 
         if (j < dimension-1) {
@@ -77,13 +80,54 @@ class Sudoku(
     return contents(cellNumber)
   }
 
+  def emptyCellValue(cellNumber: Int): Unit = {
+    setCellValue(cellNumber, None)
+  }
+
   def setCellValue(cellNumber: Int, cellValue: Int): Unit = {
-    assertWithinBounds(cellNumber)
-    assertValueAllowed(cellValue)
-    contents(cellNumber) = Some(cellValue)
+    setCellValue(cellNumber, Some(cellValue))
   }
 
   def getId(): UUID = id
+
+  def fetchFirstOpenCell(): Option[Int] = {
+    for (cellNumber <- 0 until dimension*dimension) {
+      val cellValue = getCellValue(cellNumber)
+      if (cellValue.isEmpty) {
+        return Some(cellNumber)
+      }
+    }
+
+    return None
+  }
+
+  def fetchCandidates(firstOpenCell: Int): List[Int] = {
+
+    val rowRange = determineRowRange(firstOpenCell / dimension)
+    val columnRange = determineColumnRange(firstOpenCell % dimension)
+    val boxNumber = ((firstOpenCell / (boxDimension * dimension)) * boxDimension) + (firstOpenCell % dimension / boxDimension)
+    val boxRange = determineBoxRange(boxNumber)
+
+    val allRanges = Set.concat(rowRange, columnRange, boxRange)
+
+    val candidates: mutable.Set[Int] = mutable.HashSet.range(1, dimension+1)
+    allRanges.map(cellNumber => getCellValue(cellNumber)).foreach(cellValue => {
+      if (cellValue.isDefined) {
+        candidates.remove(cellValue.get)
+      }
+    })
+
+    return candidates.toList
+  }
+
+  private def setCellValue(cellNumber: Int, cellValue: Option[Int]): Unit = {
+    assertWithinBounds(cellNumber)
+    if (cellValue.isDefined) {
+      assertValueAllowed(cellValue.get)
+    }
+
+    contents(cellNumber) = cellValue
+  }
 
   private def assertWithinBounds(cellNumber: Int) = if (cellNumber < 0 || cellNumber >= contents.size) {
     throw new IllegalArgumentException(s"${cellNumber} is out of bounds")
@@ -96,23 +140,36 @@ class Sudoku(
   }
 
   private def isRowValid(rowNumber: Int): Boolean = {
-    val begin = rowNumber * dimension
-    val end = (rowNumber+1) * dimension
-    val rowRange: List[Int] = List.range(begin, end)
-
+    val rowRange = determineRowRange(rowNumber)
     return isRangeValid(Set[Int](), rowRange)
   }
 
+  private def determineRowRange(rowNumber: Int): List[Int] = {
+    val begin = rowNumber * dimension
+    val end = (rowNumber+1) * dimension
+    val rowRange: List[Int] = List.range(begin, end)
+    return rowRange
+  }
+
   private def isColumnValid(columnNumber: Int): Boolean = {
+    val columnRange: List[Int] = determineColumnRange(columnNumber)
+    return isRangeValid(Set[Int](), columnRange)
+  }
+
+  def determineColumnRange(columnNumber: Int): List[Int] = {
     val begin = columnNumber
     val end = columnNumber + dimension * (dimension-1)
     val step = dimension
     val columnRange: List[Int] = List.range(begin, end, step)
-
-    return isRangeValid(Set[Int](), columnRange)
+    return columnRange
   }
 
   private def isBoxValid(boxNumber: Int): Boolean = {
+    val boxRange: List[Int] = determineBoxRange(boxNumber)
+    return isRangeValid(Set[Int](), boxRange.toList)
+  }
+
+  private def determineBoxRange(boxNumber: Int): List[Int] = {
     val begin = boxNumber * boxDimension + (boxNumber / 3) * (dimension * 2)
     val boxRange: ArrayBuffer[Int] = ArrayBuffer()
 
@@ -122,7 +179,7 @@ class Sudoku(
       }
     }
 
-    return isRangeValid(Set[Int](), boxRange.toList)
+    return boxRange.toList
   }
 
   private def isRangeValid(encounteredElements: Set[Int], range: List[Int]): Boolean = {
@@ -147,6 +204,8 @@ class Sudoku(
 }
 
 object Sudoku {
+
+  val EMPTY_CELL_VALUE: String = "-"
 
   def emptySodoku(): Sudoku = new Sudoku(9)
 

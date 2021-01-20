@@ -12,6 +12,7 @@ class SudokuRouter @Inject()(controller: SudokuController) extends SimpleRouter 
   override def routes: Routes = {
     case GET(p"/") => controller.fetchAll
     case GET(p"/new") => controller.createNew
+    case GET(p"/$id/solve") => controller.solveById(id: String)
     case GET(p"/$id") => controller.fetchById(id: String)
     case POST(p"/") => controller.upload
     case DELETE(p"/$id") => controller.delete(id: String)

@@ -33,11 +33,29 @@ class SudokuService {
     saveToRepo(sudoku)
   }
 
+  def save(sudoku: Sudoku): Future[Sudoku] = {
+    saveToRepo(sudoku)
+  }
+
   def deleteById(id: String): Future[Option[Sudoku]] = {
     val optionalSudoku: Option[Sudoku] = findById(id)
 
     if (optionalSudoku.isDefined) {
         sudokuRepo.remove(optionalSudoku.get.getId())
+    }
+
+    return Future.successful(optionalSudoku)
+  }
+
+  def solveSudoku(id: String): Future[Option[Sudoku]] = {
+    val optionalSudoku: Option[Sudoku] = findById(id)
+
+    if (optionalSudoku.isDefined) {
+      val sudoku = optionalSudoku.get
+
+      if (sudoku.isValid()) {
+        solveSudoku(sudoku, sudoku.fetchFirstOpenCell())
+      }
     }
 
     return Future.successful(optionalSudoku)
@@ -54,6 +72,30 @@ class SudokuService {
     } catch {
       case _ => return None
     }
+  }
+
+  private def solveSudoku(sudoku: Sudoku, firstOpenCell: Option[Int]): Sudoku = {
+
+    if (firstOpenCell.isDefined) {
+      val firstOpenCellNumber: Int = firstOpenCell.get
+
+      val candidates: List[Int] = sudoku.fetchCandidates(firstOpenCellNumber)
+      for (candidate <- candidates) {
+        sudoku.setCellValue(firstOpenCellNumber, candidate)
+
+        if (sudoku.isValid()) {
+          solveSudoku(sudoku, sudoku.fetchFirstOpenCell())
+
+          if (sudoku.isComplete()) {
+            return sudoku
+          }
+        }
+      }
+
+      sudoku.emptyCellValue(firstOpenCellNumber)
+    }
+
+    return sudoku
   }
 
 }

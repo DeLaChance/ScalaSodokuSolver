@@ -1,4 +1,4 @@
-package sudoku
+package sudoku.domain
 
 import main.scala.sodoku.domain.Sudoku
 import org.scalatest._
@@ -106,6 +106,50 @@ class SudokuSpec extends FunSuite with DiagrammedAssertions {
     assert(!isValid)
   }
 
+  test("Test that box is valid") {
+    // Given
+    val input = "" +
+      "1,2,3,-,-,-,-,-,-\n" +
+      "4,5,6,-,-,-,-,-,-\n" +
+      "7,8,9,-,-,-,-,-,-\n" +
+      "-,-,-,-,-,-,-,-,-\n" +
+      "-,-,-,-,-,-,-,-,-\n" +
+      "-,-,-,-,-,-,-,-,-\n" +
+      "-,-,-,-,-,-,1,2,3\n" +
+      "-,-,-,-,-,-,4,5,6\n" +
+      "-,-,-,-,-,-,7,8,9"
+    val sudoku = new Sudoku(input)
+    print(sudoku.toString())
+
+    // When
+    val isValid = sudoku.isValid()
+
+    // Then
+    assert(isValid)
+  }
+
+  test("Test that box is invalid") {
+    // Given
+    val input = "" +
+      "1,2,3,-,-,-,-,-,-\n" +
+      "4,5,6,-,-,-,-,-,-\n" +
+      "7,8,9,-,-,-,-,-,-\n" +
+      "-,-,-,1,2,3,-,-,-\n" +
+      "-,-,-,4,5,5,-,-,-\n" +
+      "-,-,-,6,7,8,-,-,-\n" +
+      "-,-,-,-,-,-,1,2,3\n" +
+      "-,-,-,-,-,-,4,5,6\n" +
+      "-,-,-,-,-,-,7,8,9"
+    val sudoku = new Sudoku(input)
+    print(sudoku.toString())
+
+    // When
+    val isValid = sudoku.isValid()
+
+    // Then
+    assert(!isValid)
+  }
+
   test("Test that sudoku is deserialized correctly") {
     // Given
     val input = "" +
@@ -126,11 +170,71 @@ class SudokuSpec extends FunSuite with DiagrammedAssertions {
 
     // Then
     println(input)
-    println(" ")
+    println("---")
     println(deserializedSudoku)
 
     assert(input == deserializedSudoku)
   }
 
+  test("Test that box candidates are as expected") {
+    // Given
+    val input = "" +
+      "1,2,3,-,-,-,-,-,-\n" +
+      "-,-,-,-,-,-,5,-,-\n" +
+      "-,-,-,-,-,-,-,-,-\n" +
+      "-,-,-,-,-,-,-,-,-\n" +
+      "-,-,-,-,-,-,-,-,-\n" +
+      "-,-,-,-,-,-,-,-,-\n" +
+      "4,-,-,-,-,-,1,2,3\n" +
+      "-,-,-,-,-,-,4,5,6\n" +
+      "-,-,-,-,-,-,7,8,9"
+    val sudoku = new Sudoku(input)
+    print(sudoku.toString())
+
+    // When
+    val candidates = sudoku.fetchCandidates(9)
+
+    // Then
+    assert(candidates.equals(List(6,7,8,9)))
+  }
+
+  test("Test that box candidates are as expected 2") {
+    // Given
+    val input = "" +
+      "1,2,3,-,-,-,-,-,-\n" +
+      "-,-,-,-,-,-,5,-,-\n" +
+      "-,-,-,-,-,-,-,-,-\n" +
+      "-,-,-,-,-,-,-,-,-\n" +
+      "-,-,-,-,-,-,-,-,-\n" +
+      "-,-,-,-,-,-,-,-,-\n" +
+      "4,-,-,-,-,-,1,2,3\n" +
+      "-,-,-,-,-,-,4,5,6\n" +
+      "-,-,-,-,-,-,7,8,9"
+    val sudoku = new Sudoku(input)
+    print(sudoku.toString())
+
+    // When
+    val candidates = sudoku.fetchCandidates(4)
+
+    // Then
+    assert(candidates.equals(List(4,5,6,7,8,9)))
+  }
+
+  test("Test that box candidates are as expected 3") {
+    // Given
+    val input =
+      "1,4,5,6,2,3,7,8,9\n2,8,6,7,9,5,-,-,-\n3,-,-,-,-,-,-,-,-\n" +
+      "4,-,-,-,-,-,-,-,-\n5,-,-,-,-,-,-,-,-\n6,-,-,-,-,-,-,-,-\n" +
+      "7,-,-,-,-,-,-,-,-\n8,-,-,-,-,-,-,-,-\n9,-,-,-,-,-,-,-,-"
+
+    val sudoku = new Sudoku(input)
+    print(sudoku.toString())
+
+    // When
+    val candidates = sudoku.fetchCandidates(15)
+
+    // Then
+    assert(candidates.equals(List(1,3,4)))
+  }
 }
 
