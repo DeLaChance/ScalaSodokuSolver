@@ -3,7 +3,7 @@ package main.scala.sodoku.domain
 import java.util.UUID
 
 import play.api.libs.json.{JsArray, JsValue, Json, Writes}
-import sudoku.utils.IntegerUtils
+import sudoku.utils.{IntegerUtils, JdbcUtils, UUIDUtils}
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -11,7 +11,8 @@ import scala.collection.mutable.ArrayBuffer
 
 class Sudoku(
   private var id: UUID = UUID.randomUUID(),
-  private var contents: Array[Option[Int]]
+  private var contents: Array[Option[Int]],
+  private var created: Long = System.currentTimeMillis
 ) {
 
   def this(dimension: Int) {
@@ -19,11 +20,7 @@ class Sudoku(
   }
 
   def this(input: String) {
-    this(contents = input.replaceAll("\"", "")
-      .replaceAll("[^\\,\\n\\ [0-9]+\\-\\*\\\\n]","")
-      .split("(\\,|\\n|\\ |\\\\n)")
-      .filter(aString => !aString.isBlank())
-      .map(aString => IntegerUtils.toInt(aString)))
+    this(contents = Sudoku.fromString(input))
   }
 
   private val dimension: Int = Math.round(Math.sqrt(contents.length)).toInt
@@ -89,6 +86,7 @@ class Sudoku(
   }
 
   def getId(): UUID = id
+  def getCreated(): Long = created
 
   def fetchFirstOpenCell(): Option[Int] = {
     for (cellNumber <- 0 until dimension*dimension) {
@@ -230,6 +228,19 @@ object Sudoku {
     val contentsString: String = json("contents").toString()
     return new Sudoku(input = contentsString)
   }
+
+  def mapFromJdbc(map: Map[String, Object]): Sudoku = {
+    val id: UUID = UUIDUtils.mapOrError(JdbcUtils.extractStringOrError(map, "id"))
+    val created: Long = JdbcUtils.extractLongOrError(map, "created")
+    val contents = fromString(JdbcUtils.extractStringOrError(map, "contents"))
+    return new Sudoku(id = id, contents = contents, created = created)
+  }
+
+  def fromString(contentsString: String): Array[Option[Int]] = contentsString.replaceAll("\"", "")
+    .replaceAll("[^\\,\\n\\ [0-9]+\\-\\*\\\\n]","")
+    .split("(\\,|\\n|\\ |\\\\n)")
+    .filter(aString => !aString.isBlank())
+    .map(aString => IntegerUtils.toInt(aString))
 
   implicit val implicitWrites = new Writes[Sudoku] {
     def writes(sodoku: Sudoku): JsValue = toJson(sodoku)

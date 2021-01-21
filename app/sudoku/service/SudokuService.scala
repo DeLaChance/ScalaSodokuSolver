@@ -1,77 +1,74 @@
 package sudoku.service
 
-import java.util.UUID
-
-import javax.inject.Singleton
+import javax.inject.{Inject, Singleton}
 import main.scala.sodoku.domain.Sudoku
+import play.api.Logger
 import play.api.libs.json.JsValue
+import sudoku.repository.SudokuRepository
+import sudoku.utils.UUIDUtils
 
-import scala.collection.mutable
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SudokuService {
+class SudokuService @Inject()(sudokuRepository: SudokuRepository)(implicit ec: ExecutionContext) {
 
-  val sudokuRepo: mutable.Map[UUID, Sudoku] = new mutable.HashMap[UUID, Sudoku]()
+  private val logger = Logger(getClass)
 
-  def fetchAll(): Future[List[Sudoku]] = {
-    Future.successful(sudokuRepo.values.toList)
-  }
+  def fetchAll(): Future[List[Sudoku]] = sudokuRepository.fetchAll()
 
-  def fetchById(id: String) = {
-    val sudoku: Option[Sudoku] = findById(id)
-    Future.successful(sudoku)
-  }
+  def fetchById(id: String) = sudokuRepository.fetchById(UUIDUtils.mapOrError(id))
 
   def createNew(): Future[Sudoku] = {
     val sudoku: Sudoku = Sudoku.emptySodoku()
-    return saveToRepo(sudoku)
+    return sudokuRepository.insert(sudoku)
   }
 
   def uploadJson(json: JsValue): Future[Sudoku] = {
     val sudoku: Sudoku = Sudoku.fromJson(json)
-    saveToRepo(sudoku)
+    return sudokuRepository.insert(sudoku)
   }
 
   def save(sudoku: Sudoku): Future[Sudoku] = {
-    saveToRepo(sudoku)
+    fetchById(sudoku.getId().toString)
+      .flatMap(optionalSudoku => {
+        if (optionalSudoku.isEmpty) {
+          sudokuRepository.insert(sudoku)
+        } else {
+          sudokuRepository.update(sudoku)
+        }
+      })
   }
 
   def deleteById(id: String): Future[Option[Sudoku]] = {
-    val optionalSudoku: Option[Sudoku] = findById(id)
-
-    if (optionalSudoku.isDefined) {
-        sudokuRepo.remove(optionalSudoku.get.getId())
-    }
-
-    return Future.successful(optionalSudoku)
+    return sudokuRepository.fetchById(UUIDUtils.mapOrError(id))
+      .flatMap(optionalSudoku => {
+        if (optionalSudoku.isDefined) {
+          sudokuRepository.delete(optionalSudoku.get)
+            .map(sudoku => Some(sudoku))
+        } else {
+          Future.successful(None)
+        }
+      })
   }
 
   def solveSudoku(id: String): Future[Option[Sudoku]] = {
-    val optionalSudoku: Option[Sudoku] = findById(id)
+    return sudokuRepository.fetchById(UUIDUtils.mapOrError(id))
+      .flatMap(optionalSudoku => {
+        if (optionalSudoku.isDefined) {
+          val sudoku = optionalSudoku.get
 
-    if (optionalSudoku.isDefined) {
-      val sudoku = optionalSudoku.get
+          logger.info(s"Start solving sudoku ${sudoku.getId()}")
+          solveSudoku(sudoku, sudoku.fetchFirstOpenCell())
 
-      if (sudoku.isValid()) {
-        solveSudoku(sudoku, sudoku.fetchFirstOpenCell())
-      }
-    }
+          if (sudoku.isComplete()) {
+            logger.info(s"Found sudoku ${sudoku.getId()} solution: ${sudoku.toString()}")
+          }
 
-    return Future.successful(optionalSudoku)
-  }
-
-  private def saveToRepo(sudoku: Sudoku): Future[Sudoku] = {
-    sudokuRepo.put(sudoku.getId(), sudoku)
-    return Future.successful(sudoku)
-  }
-
-  private def findById(id: String): Option[Sudoku] = {
-    try {
-      return Some(sudokuRepo(UUID.fromString(id)))
-    } catch {
-      case _ => return None
-    }
+          save(sudoku).map(sudoku => Some(sudoku))
+        } else {
+          Future.successful(None)
+        }
+      })
   }
 
   private def solveSudoku(sudoku: Sudoku, firstOpenCell: Option[Int]): Sudoku = {

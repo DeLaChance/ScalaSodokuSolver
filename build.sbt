@@ -11,6 +11,11 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play" % playVersion,
   "com.typesafe.play" %% "play-json" % playVersion,
   "com.typesafe" % "config" % "1.4.1",
+
+  jdbc,
+  "org.postgresql" % "postgresql" % "42.1.1",
+  "org.playframework.anorm" %% "anorm" % "2.6.5",
+
   "org.scalatestplus.play" %% "scalatestplus-play" % "5.0.0" % "test",
 )
 libraryDependencies += guice
